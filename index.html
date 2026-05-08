@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>🔗 FlexShort | Editable URL Shortener</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', 'Inter', 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(145deg, #f1f5f9 0%, #e6edf4 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+        }
+
+        .card {
+            max-width: 1300px;
+            width: 100%;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(2px);
+            border-radius: 2.5rem;
+            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.25), 0 2px 6px rgba(0,0,0,0.05);
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .container {
+            padding: 2rem 2rem 2rem 2rem;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #0f2b3d, #1b4f72);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sub {
+            color: #3c5a6f;
+            margin-top: 0.4rem;
+            margin-bottom: 2rem;
+            border-left: 4px solid #2c7da0;
+            padding-left: 1rem;
+            font-weight: 500;
+        }
+
+        .shorten-panel {
+            background: white;
+            border-radius: 2rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 20px -6px rgba(0,0,0,0.08);
+            border: 1px solid rgba(44, 125, 160, 0.2);
+        }
+
+        .input-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .input-field {
+            flex: 3;
+            min-width: 200px;
+        }
+
+        .custom-slug-field {
+            flex: 2;
+            min-width: 180px;
+        }
+
+        .input-field label, .custom-slug-field label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 0.4rem;
+            color: #1e4a6e;
+        }
+
+        input, button {
+            border: none;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.9rem 1rem;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 1.2rem;
+            transition: all 0.2s;
+        }
+
+        input:focus {
+            border-color: #2c7da0;
+            box-shadow: 0 0 0 3px rgba(44,125,160,0.2);
+            background: white;
+        }
+
+        button {
+            background: #1f5e7e;
+            color: white;
+            font-weight: 600;
+            padding: 0 1.8rem;
+            border-radius: 1.8rem;
+            cursor: pointer;
+            transition: 0.15s;
+            height: 3.2rem;
+            align-self: flex-end;
+            margin-bottom: 2px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        button:hover {
+            background: #0e4a66;
+            transform: scale(0.97);
+        }
+
+        .edit-hint {
+            background: #eef2ff;
+            padding: 0.6rem 1rem;
+            border-radius: 1.2rem;
+            font-size: 0.8rem;
+            color: #155e75;
+            display: inline-block;
+            margin-top: 0.5rem;
+        }
+
+        .url-list-container {
+            background: white;
+            border-radius: 1.8rem;
+            padding: 0.2rem 0.2rem 0.2rem 0;
+            border: 1px solid #e2e8f0;
+            overflow-x: auto;
+        }
+
+        .url-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .url-table th {
+            text-align: left;
+            padding: 1rem 1rem;
+            background: #f1f6fa;
+            color: #1e4b6e;
+            font-weight: 600;
+        }
+
+        .url-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #eef2f0;
+            vertical-align: middle;
+            word-break: break-all;
+        }
+
+        .short-link {
+            font-family: monospace;
+            background: #eef2ff;
+            padding: 0.3rem 0.6rem;
+            border-radius: 2rem;
+            font-weight: 500;
+            color: #0369a1;
+            font-size: 0.85rem;
+            display: inline-block;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+
+        .edit-btn, .save-edit-btn, .cancel-edit-btn, .delete-btn {
+            border: none;
+            padding: 0.4rem 1rem;
+            border-radius: 2rem;
+            font-weight: 500;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.1s;
+            height: auto;
+            box-shadow: none;
+        }
+
+        .edit-btn {
+            background: #e6f7ff;
+            color: #0077b6;
+            border: 1px solid #b6e0f5;
+        }
+
+        .edit-btn:hover {
+            background: #cae9ff;
+            transform: scale(0.96);
+        }
+
+        .save-edit-btn {
+            background: #0e7c32;
+            color: white;
+        }
+
+        .cancel-edit-btn {
+            background: #cbd5e1;
+            color: #1e293b;
+        }
+
+        .delete-btn {
+            background: #ffe4e2;
+            color: #b91c1c;
+            border: 1px solid #ffc9c6;
+        }
+
+        .delete-btn:hover {
+            background: #ffcdca;
+        }
+
+        .inline-edit-input {
+            padding: 0.4rem 0.6rem;
+            font-size: 0.85rem;
+            width: 100%;
+            min-width: 200px;
+            border-radius: 1rem;
+            background: white;
+            border: 1px solid #2c7da0;
+        }
+
+        .status-msg {
+            margin-top: 1rem;
+            padding: 0.6rem;
+            border-radius: 1.2rem;
+            font-size: 0.85rem;
+            background: #ffffffcc;
+            text-align: center;
+        }
+
+        .copy-btn {
+            background: #eef2ff;
+            border: none;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 1rem;
+            margin-left: 0.5rem;
+            cursor: pointer;
+            color: #0369a1;
+        }
+
+        .footer-note {
+            margin-top: 1.5rem;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #4b6b82;
+        }
+
+        @media (max-width: 700px) {
+            .container { padding: 1.5rem; }
+            .input-group { flex-direction: column; }
+            button { align-self: stretch; }
+            .url-table th, .url-table td { padding: 0.7rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="container">
+        <h1>
+            <span>✂️🔗</span> FlexShort
+        </h1>
+        <div class="sub">Shorten URLs · Edit destination · Full control</div>
+
+        <div class="shorten-panel">
+            <div class="input-group">
+                <div class="input-field">
+                    <label>🌐 Long URL</label>
+                    <input type="url" id="longUrlInput" placeholder="https://example.com/very/long/path" autocomplete="off">
+                </div>
+                <div class="custom-slug-field">
+                    <label>🔧 Custom slug (optional)</label>
+                    <input type="text" id="customSlugInput" placeholder="my-page  or  leave empty">
+                </div>
+                <button id="createBtn">✨ Shorten</button>
+            </div>
+            <div class="edit-hint">
+                💡 Tip: You can edit any short link's original destination later. Click "Edit" → change URL → Save.
+            </div>
+        </div>
+
+        <div class="url-list-container">
+            <table class="url-table" id="urlTable">
+                <thead>
+                    <tr>
+                        <th>Short URL (slug)</th>
+                        <th>Original Destination</th>
+                        <th style="width: 180px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr class="placeholder-row">
+                        <td colspan="3" style="text-align: center; color: #6c8e9e;">✨ No links yet — create your first short link!</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="status-msg" id="statusMsg"></div>
+        <div class="footer-note">
+            ⚡ Editable URL shortener — modify target URL, keep same short slug. All data stored in your browser.
+        </div>
+    </div>
+</div>
+
+<script>
+    // ---------- STORAGE KEY ----------
+    const STORAGE_KEY = "flexshort_links";
+
+    // Data structure: { slug: "abc", longUrl: "https://...", createdAt: timestamp }
+    let linksMap = new Map();   // key: slug, value: { slug, longUrl, createdAt }
+
+    // Load from localStorage
+    function loadLinks() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+            try {
+                const arr = JSON.parse(stored);
+                linksMap.clear();
+                arr.forEach(item => {
+                    if (item.slug && item.longUrl) {
+                        linksMap.set(item.slug, { slug: item.slug, longUrl: item.longUrl, createdAt: item.createdAt || Date.now() });
+                    }
+                });
+            } catch(e) { console.warn(e); }
+        }
+        renderTable();
+    }
+
+    // Save to localStorage
+    function persistLinks() {
+        const arr = Array.from(linksMap.values());
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+    }
+
+    // Helper: validate URL format
+    function isValidUrl(urlString) {
+        try {
+            const url = new URL(urlString);
+            return url.protocol === "http:" || url.protocol === "https:";
+        } catch {
+            return false;
+        }
+    }
+
+    // Helper: generate random slug (6 chars alphanumeric)
+    function generateRandomSlug() {
+        const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let slug = '';
+        for (let i = 0; i < 6; i++) {
+            slug += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return slug;
+    }
+
+    // Create new short link (or update if slug already exists? we treat as "create only if slug free" for new creation)
+    function createShortLink(longUrl, desiredSlug = null) {
+        // trim & clean
+        longUrl = longUrl.trim();
+        if (!longUrl) {
+            showStatus("❌ Please enter a long URL", "error");
+            return null;
+        }
+        if (!isValidUrl(longUrl)) {
+            showStatus("⚠️ Invalid URL. Use http:// or https://", "error");
+            return null;
+        }
+
+        let finalSlug = null;
+        if (desiredSlug && desiredSlug.trim() !== "") {
+            let slugCandidate = desiredSlug.trim();
+            // slug validation: only letters, numbers, hyphen, underscore (no spaces, safe for path)
+            const slugRegex = /^[a-zA-Z0-9_-]+$/;
+            if (!slugRegex.test(slugCandidate)) {
+                showStatus("❌ Custom slug can only contain letters, numbers, hyphens and underscores.", "error");
+                return null;
+            }
+            if (slugCandidate.length > 32) {
+                showStatus("❌ Slug too long (max 32 characters)", "error");
+                return null;
+            }
+            if (linksMap.has(slugCandidate)) {
+                showStatus(`❌ Slug "/${slugCandidate}" already exists. Try another one or leave empty for auto.`, "error");
+                return null;
+            }
+            finalSlug = slugCandidate;
+        } else {
+            // auto generate unique slug
+            let attempts = 0;
+            while (attempts < 15) {
+                const candidate = generateRandomSlug();
+                if (!linksMap.has(candidate)) {
+                    finalSlug = candidate;
+                    break;
+                }
+                attempts++;
+            }
+            if (!finalSlug) {
+                showStatus("⚠️ Could not generate unique slug after many tries. Try custom slug.", "error");
+                return null;
+            }
+        }
+
+        const newLink = {
+            slug: finalSlug,
+            longUrl: longUrl,
+            createdAt: Date.now()
+        };
+        linksMap.set(finalSlug, newLink);
+        persistLinks();
+        renderTable();
+        showStatus(`✅ Short link created: ${window.location.origin}${window.location.pathname}?r=${finalSlug}  (slug: ${finalSlug})`, "success");
+        return newLink;
+    }
+
+    // Edit existing link: update longUrl
+    function editLongUrl(slug, newLongUrl) {
+        if (!linksMap.has(slug)) {
+            showStatus(`❌ Cannot edit — slug "${slug}" not found.`, "error");
+            return false;
+        }
+        newLongUrl = newLongUrl.trim();
+        if (!newLongUrl) {
+            showStatus("❌ Destination URL cannot be empty", "error");
+            return false;
+        }
+        if (!isValidUrl(newLongUrl)) {
+            showStatus("⚠️ Invalid destination URL. Must start with http:// or https://", "error");
+            return false;
+        }
+
+        const existing = linksMap.get(slug);
+        existing.longUrl = newLongUrl;
+        linksMap.set(slug, existing);
+        persistLinks();
+        renderTable();
+        showStatus(`✏️ Updated short link /${slug} → ${newLongUrl.substring(0, 60)}${newLongUrl.length>60?'...':''}`, "success");
+        return true;
+    }
+
+    // Delete link
+    function deleteLink(slug) {
+        if (!linksMap.has(slug)) return false;
+        linksMap.delete(slug);
+        persistLinks();
+        renderTable();
+        showStatus(`🗑️ Deleted short link "/${slug}"`, "info");
+        return true;
+    }
+
+    // Helper for full short URL preview
+    function getFullShortUrl(slug) {
+        // We build base URL without hash, using current origin + pathname, add query param? alternatively we can build clean /r/slug but simpler:
+        // For redirect to work, we'll implement global redirect listener on page load that reads ?r=slug
+        // So we display same style: `${origin}${pathname}?r=${slug}`
+        const base = `${window.location.origin}${window.location.pathname}`;
+        return `${base}?r=${slug}`;
+    }
+
+    // copy to clipboard
+    async function copyToClipboard(text, slugHint) {
+        try {
+            await navigator.clipboard.writeText(text);
+            showStatus(`📋 Copied: ${text}`, "success");
+        } catch (err) {
+            showStatus(`⚠️ Could not copy`, "error");
+        }
+    }
+
+    // ---------- RENDER TABLE WITH EDIT MODE SUPPORT (inline editing) ----------
+    // Keep track which row is currently in edit mode (store slug being edited)
+    let editingSlug = null;
+    let editTempValue = "";
+
+    function renderTable() {
+        const tbody = document.getElementById('tableBody');
+        if (!tbody) return;
+        const linksArray = Array.from(linksMap.values()).sort((a,b) => b.createdAt - a.createdAt);
+        
+        if (linksArray.length === 0) {
+            tbody.innerHTML = `<tr class="placeholder-row"><td colspan="3" style="text-align: center; color: #6c8e9e;">✨ No links yet — create your first short link!</td></tr>`;
+            return;
+        }
+        
+        let html = "";
+        for (let link of linksArray) {
+            const slug = link.slug;
+            const longUrl = link.longUrl;
+            const shortDisplay = getFullShortUrl(slug);
+            const isEditing = (editingSlug === slug);
+            
+            if (isEditing) {
+                // Editing row mode: show input for longUrl and save/cancel buttons
+                html += `<tr style="background: #fefce8;">
+                            <td style="vertical-align: middle;">
+                                <div class="short-link">🔗 /${slug}</div>
+                                <button class="copy-btn" data-slug="${slug}" data-copy-type="slug">📋 Copy slug</button>
+                            </td>
+                            <td>
+                                <input type="url" id="edit-input-${slug}" class="inline-edit-input" value="${escapeHtml(longUrl)}" style="width: 100%;">
+                            </td>
+                            <td class="action-buttons">
+                                <button class="save-edit-btn" data-slug="${slug}">💾 Save</button>
+                                <button class="cancel-edit-btn" data-slug="${slug}">✖ Cancel</button>
+                            </td>
+                         </tr>`;
+            } else {
+                // Normal row
+                html += `<tr>
+                            <td>
+                                <div class="short-link">🔗 /${slug}</div>
+                                <button class="copy-btn" data-slug="${slug}" data-copy-type="full">📋 Copy full link</button>
+                                <button class="copy-btn" data-slug="${slug}" data-copy-type="slug">📋 Copy slug</button>
+                            </td>
+                            <td title="${escapeHtml(longUrl)}" style="max-width: 320px; word-break: break-all;">
+                                ${escapeHtml(truncate(longUrl, 75))}
+                            </td>
+                            <td class="action-buttons">
+                                <button class="edit-btn" data-slug="${slug}">✏️ Edit URL</button>
+                                <button class="delete-btn" data-slug="${slug}">🗑️ Delete</button>
+                            </td>
+                         </tr>`;
+            }
+        }
+        tbody.innerHTML = html;
+        
+        // Attach event listeners after render (dynamic)
+        attachRowEvents();
+    }
+    
+    function attachRowEvents() {
+        // Edit buttons (normal mode)
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.removeEventListener('click', handleEditClick);
+            btn.addEventListener('click', handleEditClick);
+        });
+        // Delete buttons
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.removeEventListener('click', handleDeleteClick);
+            btn.addEventListener('click', handleDeleteClick);
+        });
+        // Save edit buttons
+        document.querySelectorAll('.save-edit-btn').forEach(btn => {
+            btn.removeEventListener('click', handleSaveEdit);
+            btn.addEventListener('click', handleSaveEdit);
+        });
+        // Cancel edit buttons
+        document.querySelectorAll('.cancel-edit-btn').forEach(btn => {
+            btn.removeEventListener('click', handleCancelEdit);
+            btn.addEventListener('click', handleCancelEdit);
+        });
+        // Copy buttons
+        document.querySelectorAll('.copy-btn').forEach(btn => {
+            btn.removeEventListener('click', handleCopyClick);
+            btn.addEventListener('click', handleCopyClick);
+        });
+    }
+    
+    function handleEditClick(e) {
+        const slug = e.currentTarget.getAttribute('data-slug');
+        if (editingSlug) {
+            showStatus("Please finish current editing (save or cancel) before editing another.", "error");
+            return;
+        }
+        editingSlug = slug;
+        renderTable();
+    }
+    
+    function handleSaveEdit(e) {
+        const slug = e.currentTarget.getAttribute('data-slug');
+        const inputElem = document.getElementById(`edit-input-${slug}`);
+        if (!inputElem) return;
+        const newUrl = inputElem.value.trim();
+        if (!newUrl) {
+            showStatus("Destination cannot be empty", "error");
+            return;
+        }
+        if (!isValidUrl(newUrl)) {
+            showStatus("Invalid URL. Please include http:// or https://", "error");
+            return;
+        }
+        const success = editLongUrl(slug, newUrl);
+        if (success) {
+            editingSlug = null;
+            renderTable();
+        } else {
+            // keep edit mode but show error status persists
+            renderTable(); // rerender but editingSlug still same? However editLongUrl failed, we can keep editing mode
+            // But editingSlug is still set, we need to reattach after rerender.
+            // However after editLongUrl false we called renderTable (which will reuse editingSlug)
+        }
+    }
+    
+    function handleCancelEdit(e) {
+        const slug = e.currentTarget.getAttribute('data-slug');
+        if (editingSlug === slug) {
+            editingSlug = null;
+            renderTable();
+            showStatus("Edit cancelled", "info");
+        } else {
+            editingSlug = null;
+            renderTable();
+        }
+    }
+    
+    function handleDeleteClick(e) {
+        const slug = e.currentTarget.getAttribute('data-slug');
+        if (confirm(`Delete short link "/${slug}" ? This action cannot be undone.`)) {
+            deleteLink(slug);
+            if (editingSlug === slug) editingSlug = null;
+        }
+    }
+    
+    async function handleCopyClick(e) {
+        const slug = e.currentTarget.getAttribute('data-slug');
+        const copyType = e.currentTarget.getAttribute('data-copy-type');
+        const link = linksMap.get(slug);
+        if (!link) {
+            showStatus("Link not found", "error");
+            return;
+        }
+        if (copyType === 'full') {
+            const fullLink = getFullShortUrl(slug);
+            await copyToClipboard(fullLink, slug);
+        } else if (copyType === 'slug') {
+            await copyToClipboard(slug, slug);
+        }
+    }
+    
+    function truncate(str, len) {
+        if (str.length <= len) return str;
+        return str.substring(0, len) + '…';
+    }
+    
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+            return c;
+        });
+    }
+    
+    let statusTimeout;
+    function showStatus(msg, type = "info") {
+        const statusDiv = document.getElementById('statusMsg');
+        if (!statusDiv) return;
+        let bgColor = "#eef2ff";
+        let icon = "ℹ️";
+        if (type === "error") { bgColor = "#ffe6e5"; icon = "❌"; }
+        if (type === "success") { bgColor = "#e0f2e9"; icon = "✅"; }
+        if (type === "info") { bgColor = "#eef2ff"; icon = "📌"; }
+        statusDiv.innerHTML = `${icon} ${msg}`;
+        statusDiv.style.background = bgColor;
+        statusDiv.style.padding = "0.7rem";
+        statusDiv.style.borderRadius = "1.2rem";
+        clearTimeout(statusTimeout);
+        statusTimeout = setTimeout(() => {
+            if (statusDiv) statusDiv.innerHTML = "";
+        }, 4000);
+    }
+    
+    // ---------- REDIRECT LOGIC: check URL parameter ?r=slug ----------
+    function handleRedirect() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const slug = urlParams.get('r');
+        if (slug && linksMap.has(slug)) {
+            const link = linksMap.get(slug);
+            const destination = link.longUrl;
+            // Optional: show small notification but we redirect immediately
+            console.log(`Redirecting ${slug} -> ${destination}`);
+            window.location.replace(destination);
+            return true;
+        } else if (slug && !linksMap.has(slug)) {
+            // Show message on page without breaking UI
+            setTimeout(() => {
+                showStatus(`⚠️ Short link "/${slug}" does not exist.`, "error");
+            }, 100);
+        }
+        return false;
+    }
+    
+    // ---------- CREATE BUTTON HANDLER ----------
+    function setupCreateButton() {
+        const createBtn = document.getElementById('createBtn');
+        const longInput = document.getElementById('longUrlInput');
+        const customSlugInput = document.getElementById('customSlugInput');
+        createBtn.addEventListener('click', () => {
+            const longUrl = longInput.value;
+            const customSlug = customSlugInput.value;
+            const created = createShortLink(longUrl, customSlug);
+            if (created) {
+                longInput.value = '';
+                customSlugInput.value = '';
+            }
+        });
+        // optional: Enter key on longUrl field triggers creation
+        longInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                createBtn.click();
+            }
+        });
+    }
+    
+    // initial loader
+    function init() {
+        loadLinks();
+        setupCreateButton();
+        // after loading, attempt redirect if needed (must have links loaded)
+        setTimeout(() => {
+            handleRedirect();
+        }, 10);
+        // re-render if storage changes externally? not needed but just watch
+        window.addEventListener('storage', (e) => {
+            if (e.key === STORAGE_KEY) {
+                loadLinks();
+                if (editingSlug) editingSlug = null;
+                renderTable();
+            }
+        });
+    }
+    
+    init();
+</script>
+</body>
+</html>
